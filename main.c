@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL/SDL.h>
@@ -641,6 +640,7 @@ void Spawn_Joueurs(int tab[TAILLE][TAILLE],int nb_joueurs, SDL_Surface *ecran){
 
         while (tab[x][y] != SOL || (x > (X_maladie-RADAR) && x < (X_maladie+RADAR)) || (y > (Y_maladie-RADAR) && y < (Y_maladie+RADAR)));
 
+        tab[x][y] = i;
 
         position_Perso.x = x * TAILLE_IMAGES;
         position_Perso.y = y * TAILLE_IMAGES;
@@ -648,7 +648,7 @@ void Spawn_Joueurs(int tab[TAILLE][TAILLE],int nb_joueurs, SDL_Surface *ecran){
         SDL_BlitSurface(perso, NULL, ecran, &position_Perso);
 
         SDL_Flip(ecran);
-
+        pause();
     }
 
 }
@@ -675,13 +675,15 @@ void Spawn_Maladie (int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     while (x<1 || x>TAILLE-1 || y<1 || y>TAILLE-1);
 
+    tab[x][y] = MALADIE;
+
     position_Maladie.x = x * TAILLE_IMAGES;
     position_Maladie.y = y * TAILLE_IMAGES;
 
     SDL_BlitSurface(maladie, NULL, ecran, &position_Maladie);
 
     SDL_Flip(ecran);
-
+    pause();
 }
 
 void Spawn_Piege(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
@@ -705,13 +707,15 @@ void Spawn_Piege(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
     }
     while (tab[x][y] != SOL);
 
+    tab[x][y] = PIEGE;
+
     position_Piege.x = x * TAILLE_IMAGES;
     position_Piege.y = y * TAILLE_IMAGES;
 
     SDL_BlitSurface(piege, NULL, ecran, &position_Piege);
 
     SDL_Flip(ecran);
-
+    pause();
 }
 
 void Spawn_Bonus(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
@@ -736,13 +740,15 @@ void Spawn_Bonus(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     while (tab[x][y] != SOL);
 
+    tab[x][y] = KIT;
+
     position_Kit.x = x * TAILLE_IMAGES;
     position_Kit.y = y * TAILLE_IMAGES;
 
     SDL_BlitSurface(kit, NULL, ecran, &position_Kit);
 
     SDL_Flip(ecran);
-
+    pause();
 }
 
 void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
@@ -754,15 +760,16 @@ void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
     SDL_Surface *maladie = NULL;
     SDL_Surface *kit = NULL;
     SDL_Surface *piege = NULL;
+    SDL_Surface *perso = NULL;
 
     piege = IMG_Load("potion.png");
     maladie = IMG_Load("maladie.png");
     terre_normale = IMG_Load("Terre_normale_V1.png");
     kit = IMG_Load("medic_kit.png");
+    perso = IMG_Load("perso.pgn");
 
 
 
-    SDL_Flip(ecran);
 
 
     for (i=0;i<TAILLE;i++)
@@ -813,7 +820,16 @@ void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
 
             }
+            else if (tab[i][j]<=1 && tab[i][j]>=30)
+            {
+                SDL_Rect position_Perso;
 
+                position_Perso.x = i * TAILLE_IMAGES;
+                position_Perso.y = j * TAILLE_IMAGES;
+                SDL_BlitSurface(perso, NULL, ecran, &position_Perso);
+
+
+            }
         }
 
     }
