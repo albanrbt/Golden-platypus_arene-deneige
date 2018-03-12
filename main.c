@@ -1,8 +1,7 @@
-
 #include <stdlib.h>
 #include <stdio.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 #include <time.h>
 #include <windows.h>
 
@@ -39,9 +38,11 @@ int Nombre_Joueurs(); // donne le nombre de joueurs dans la partie
 
 int Numero_Joueur(int tab[TAILLE][TAILLE],int test); // recupere le numero du joueur suivant ses coordonnees
 
-void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30]); // propage la maladie
+void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30], SDL_Surface *ecran); // propage la maladie
 
-int Shifumi (int J1, int J2, int joueur); // lance le shifumi si egalite entre 2 joueurs
+int IA (int joueur, SDL_Surface *ecran, int tab[TAILLE][TAILLE]);
+
+int Shifumi (int J1, int J2, int joueur, int tab[TAILLE][TAILLE], SDL_Surface *ecran); // lance le shifumi si egalite entre 2 joueurs
 
 void Spawn_Bonus(int tab[TAILLE][TAILLE], SDL_Surface *ecran); // fait spawn les bonus
 
@@ -51,7 +52,9 @@ void Spawn_Maladie (int tab[TAILLE][TAILLE], SDL_Surface *ecran); // fait spawn 
 
 void Spawn_Piege(int tab[TAILLE][TAILLE], SDL_Surface *ecran); // fait spawn les pieges
 
-void Tour_par_Tour(int tab[TAILLE][TAILLE],int nb_joueurs,int Nb_Vies[30],int joueur); // execute les actions des joueurs
+void Tour_par_Tour(int tab[TAILLE][TAILLE],int nb_joueurs,int Nb_Vies[30], SDL_Surface *ecran); // execute les actions des joueurs
+
+void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran);
 
 int jeu(SDL_Surface *ecran);
 
@@ -114,7 +117,7 @@ void SetColor(int ForgC)
 
 }
 
-int IA(int joueur)
+int IA(int joueur,SDL_Surface *ecran,int tab[TAILLE][TAILLE])
 {
 
 
@@ -126,27 +129,27 @@ int IA(int joueur)
 
     case 1:
 
-        ///code IA
+        action = 0;
         break;
 
     case 2:
 
-        ///code IA
+        action = 1;
         break;
 
     case 3:
 
-        ///code IA
+        action = 2;
         break;
 
     case 4:
 
-        ///code IA
+        action = 3;
         break;
 
     case 5:
 
-        ///code IA
+        action = 4;
         break;
 
      case 6:
@@ -320,7 +323,7 @@ int coord_JoueursY(int tab[TAILLE][TAILLE],int joueurs){
     return 0;
 }
 
-void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30]){
+void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30], SDL_Surface *ecran){
 
     int i,j;
     int test;
@@ -370,6 +373,8 @@ void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30]){
                 }
                 }
 
+
+
                 test = rand()%CHANCE;
 
                     if (test == 1 && i > 0 && j > 0 && i<TAILLE && j<TAILLE){
@@ -393,6 +398,7 @@ void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30]){
 
                 }
                 }
+
 
                 test = rand()%CHANCE;
 
@@ -452,13 +458,14 @@ void Propagation_Maladie(int tab[TAILLE][TAILLE],int joueur,int Nb_Vies[30]){
 
 }
 }
+    Afficher_carte(tab,ecran);
+    SDL_Flip(ecran);
+    SDL_Delay(100);
 
     for(i=0;i<TAILLE;i++){
 
 
-
         for(j=0;j<TAILLE;j++){
-
 
 
             tab[i][j] = tab1[i][j];
@@ -491,62 +498,69 @@ int Degats(int Nb_Vies[30],int joueur){
     }
 }
 
-void Tour_par_Tour(int tab[TAILLE][TAILLE],int nb_joueurs,int Nb_Vies[30],int joueur){ /// La fonction qui lance les différentes actions a faire (ou les execute)
+void Tour_par_Tour(int tab[TAILLE][TAILLE],int nb_joueurs,int Nb_Vies[30], SDL_Surface *ecran){ /// La fonction qui lance les différentes actions a faire (ou les execute)
 
-int i, x, y;
-int action;
+    int i, x, y;
+    int action;
+    int degats;
 
         for (i=1;i<= nb_joueurs+1;i++)
 
         {
-            x = coord_JoueursX(tab,joueur);
+            x = coord_JoueursX(tab,i);
 
-            y = coord_JoueursY(tab,joueur);
+            y = coord_JoueursY(tab,i);
 
-            action = IA(joueur);
+            action = IA(i,ecran, tab);
 
 
 
        if (action == 1){ ///en bas
 
-            tab[x][y]=0;
 
-            tab[x+1][y]=i;
+            if ((tab[x+1][y] == PIEGE) || (tab[x+1][y] == MALADIE))
+
+                {
+
+                degats = Degats(Nb_Vies,i);
+
+
+            if (degats == 1)
+            {
+                tab[x][y] = 0;
+
+                tab[x+1][y] = i;
 
 
 
-            if (tab[x+1][y]== KIT){
+            if (tab[x+1][y]== KIT)
+                {
 
-                Bonus(Nb_Vies,joueur);
-
+                Bonus(Nb_Vies,i);
+                }
             }
-
-            else if (tab[x+1][y] == PIEGE){
-
-                Degats(Nb_Vies,joueur);
-
-            }
-
        }
-
+       }
 
        else if (action == 2){///en haut
 
-            tab[x][y]=0;
+            tab[x][y] = 0;
 
-            tab[x-1][y]=i;
+            tab[x-1][y] = i;
 
 
 
-            if (tab[x-1][y] == KIT){
+            if (tab[x-1][y] == KIT)
+                {
 
-                Bonus(Nb_Vies,joueur);
+                Bonus(Nb_Vies,i);
 
             }
 
-            else if (tab[x-1][y] == PIEGE){
+            else if ((tab[x-1][y] == PIEGE) || (tab[x-1][y] == MALADIE))
+                {
 
-                Degats(Nb_Vies,joueur);
+                Degats(Nb_Vies,i);
 
             }
 
@@ -555,21 +569,22 @@ int action;
 
        else if (action == 3){/// a droite
 
-          tab[x][y]=0;
+          tab[x][y] = 0;
 
-          tab[x][y+1]=i;
+          tab[x][y+1] = i;
 
 
 
-            if (tab[x][y+1] == KIT){
+            if (tab[x][y+1] == KIT)
+                {
 
-                Bonus(Nb_Vies,joueur);
+                Bonus(Nb_Vies,i);
 
             }
 
-            else if (tab[x][y+1] == PIEGE){
+            else if ((tab[x][y+1] == PIEGE) || (tab[x][y+1] == MALADIE)){
 
-                Degats(Nb_Vies,joueur);
+                Degats(Nb_Vies,i);
 
             }
 
@@ -579,21 +594,23 @@ int action;
 
        else if (action == 4){ /// a gauche
 
-        tab[x][y]=0;
+        tab[x][y] = 0;
 
-        tab[x][y-1]=i;
+        tab[x][y-1] = i;
 
 
 
-            if (tab[x][y-1] == KIT){
+            if (tab[x][y-1] == KIT)
+            {
 
-                Bonus(Nb_Vies,joueur);
+                Bonus(Nb_Vies,i);
 
             }
 
-            else if (tab[x][y-1] == PIEGE){
+            else if ((tab[x][y-1] == PIEGE) || (tab[x][y-1] == MALADIE))
+                {
 
-                Degats(Nb_Vies,joueur);
+                Degats(Nb_Vies,i);
 
             }
 
@@ -601,14 +618,17 @@ int action;
 
 
 
-       else if (action == 5){ /// pas bouger
+       else if (action == 0){ /// pas bouger
 
-        tab[x][y] = joueur;
+        tab[x][y] = i;
 
        }
 
         }
 
+            Afficher_carte(tab,ecran);
+            SDL_Flip(ecran);
+            SDL_Delay(100);
 }
 
 void Spawn_Joueurs(int tab[TAILLE][TAILLE],int nb_joueurs, SDL_Surface *ecran){
@@ -626,7 +646,7 @@ void Spawn_Joueurs(int tab[TAILLE][TAILLE],int nb_joueurs, SDL_Surface *ecran){
 
     Y_maladie = coord_JoueursY(tab,MALADIE);
 
-
+    srand(time(NULL));
 
     for (i=1;i<=nb_joueurs;i++){
 
@@ -641,6 +661,7 @@ void Spawn_Joueurs(int tab[TAILLE][TAILLE],int nb_joueurs, SDL_Surface *ecran){
 
         while (tab[x][y] != SOL || (x > (X_maladie-RADAR) && x < (X_maladie+RADAR)) || (y > (Y_maladie-RADAR) && y < (Y_maladie+RADAR)));
 
+        tab[x][y] = i;
 
         position_Perso.x = x * TAILLE_IMAGES;
         position_Perso.y = y * TAILLE_IMAGES;
@@ -648,7 +669,7 @@ void Spawn_Joueurs(int tab[TAILLE][TAILLE],int nb_joueurs, SDL_Surface *ecran){
         SDL_BlitSurface(perso, NULL, ecran, &position_Perso);
 
         SDL_Flip(ecran);
-
+        SDL_Delay(200);
     }
 
 }
@@ -662,6 +683,7 @@ void Spawn_Maladie (int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     maladie = IMG_Load("maladie.png");
 
+    srand(time(NULL));
 
     do
 
@@ -675,13 +697,15 @@ void Spawn_Maladie (int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     while (x<1 || x>TAILLE-1 || y<1 || y>TAILLE-1);
 
+    tab[x][y] = MALADIE;
+
     position_Maladie.x = x * TAILLE_IMAGES;
     position_Maladie.y = y * TAILLE_IMAGES;
 
     SDL_BlitSurface(maladie, NULL, ecran, &position_Maladie);
 
     SDL_Flip(ecran);
-
+    SDL_Delay(200);
 }
 
 void Spawn_Piege(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
@@ -693,6 +717,7 @@ void Spawn_Piege(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     piege = IMG_Load("potion.png");
 
+    srand(time(NULL));
 
     do
 
@@ -705,13 +730,15 @@ void Spawn_Piege(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
     }
     while (tab[x][y] != SOL);
 
+    tab[x][y] = PIEGE;
+
     position_Piege.x = x * TAILLE_IMAGES;
     position_Piege.y = y * TAILLE_IMAGES;
 
     SDL_BlitSurface(piege, NULL, ecran, &position_Piege);
 
     SDL_Flip(ecran);
-
+    SDL_Delay(200);
 }
 
 void Spawn_Bonus(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
@@ -723,6 +750,7 @@ void Spawn_Bonus(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     kit = IMG_Load("medic_kit.png");
 
+    srand(time(NULL));
 
     do
 
@@ -736,13 +764,15 @@ void Spawn_Bonus(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
     while (tab[x][y] != SOL);
 
+    tab[x][y] = KIT;
+
     position_Kit.x = x * TAILLE_IMAGES;
     position_Kit.y = y * TAILLE_IMAGES;
 
     SDL_BlitSurface(kit, NULL, ecran, &position_Kit);
 
     SDL_Flip(ecran);
-
+    SDL_Delay(200);
 }
 
 void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
@@ -754,15 +784,16 @@ void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
     SDL_Surface *maladie = NULL;
     SDL_Surface *kit = NULL;
     SDL_Surface *piege = NULL;
+    SDL_Surface *perso = NULL;
 
     piege = IMG_Load("potion.png");
     maladie = IMG_Load("maladie.png");
     terre_normale = IMG_Load("Terre_normale_V1.png");
     kit = IMG_Load("medic_kit.png");
+    perso = IMG_Load("perso.png");
 
 
 
-    SDL_Flip(ecran);
 
 
     for (i=0;i<TAILLE;i++)
@@ -798,7 +829,7 @@ void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
                 position_Kit.x = i * TAILLE_IMAGES;
                 position_Kit.y = j * TAILLE_IMAGES;
-                SDL_BlitSurface(maladie, NULL, ecran, &position_Kit);
+                SDL_BlitSurface(kit, NULL, ecran, &position_Kit);
 
 
             }
@@ -809,16 +840,25 @@ void Afficher_carte(int tab[TAILLE][TAILLE], SDL_Surface *ecran){
 
                 position_Piege.x = i * TAILLE_IMAGES;
                 position_Piege.y = j * TAILLE_IMAGES;
-                SDL_BlitSurface(maladie, NULL, ecran, &position_Piege);
+                SDL_BlitSurface(piege, NULL, ecran, &position_Piege);
 
 
             }
+            else if ((tab[i][j] >= 1) && (tab[i][j] <= 30))
+            {
+                SDL_Rect position_Perso;
 
+                position_Perso.x = i * TAILLE_IMAGES;
+                position_Perso.y = j * TAILLE_IMAGES;
+                SDL_BlitSurface(perso, NULL, ecran, &position_Perso);
+
+
+            }
         }
 
     }
     SDL_Flip(ecran);
-    pause();
+    SDL_Delay(50);
 }
 
 int Nombre_Joueurs(){
@@ -866,7 +906,7 @@ int Numero_Joueur(int tab[TAILLE][TAILLE],int test)
 
 }
 
-int Shifumi (int J1, int J2,int joueur)
+int Shifumi (int J1, int J2,int joueur,int tab[TAILLE][TAILLE], SDL_Surface *ecran)
 {
 
     int i,jeu_1,jeu_2;
@@ -887,9 +927,9 @@ int Shifumi (int J1, int J2,int joueur)
 
         {
 
-            jeu_1 = IA(joueur);
+            jeu_1 = IA(joueur,ecran,tab);
 
-            jeu_2 = IA(joueur);
+            jeu_2 = IA(joueur,ecran,tab);
 
         }
 
@@ -1002,7 +1042,7 @@ int Afficher_Gagnant(int gagnant)
 
 }
 
-int fin_jeu(int tab[TAILLE][TAILLE],int joueur, SDL_Surface *ecran)
+int fin_jeu (int tab[TAILLE][TAILLE],int joueur, SDL_Surface *ecran)
 {
 
     int i,j,y;
@@ -1061,7 +1101,7 @@ int fin_jeu(int tab[TAILLE][TAILLE],int joueur, SDL_Surface *ecran)
 
         {
 
-            gagnant = Shifumi(Joueur1,Joueur2,joueur);
+            gagnant = Shifumi(Joueur1, Joueur2, joueur, tab, ecran);
 
             y = Afficher_Gagnant(gagnant);
 
@@ -1097,7 +1137,7 @@ int fin_jeu(int tab[TAILLE][TAILLE],int joueur, SDL_Surface *ecran)
 
 }
 
-int jeu(SDL_Surface *ecran)
+int jeu (SDL_Surface *ecran)
 {
     int i,j;
     int tab[TAILLE][TAILLE];
@@ -1154,11 +1194,11 @@ int jeu(SDL_Surface *ecran)
 
             Afficher_carte(tab, ecran);
 
-            //Tour_par_Tour(tab,nb_joueurs,Nb_Vies,joueur);
+            Tour_par_Tour(tab,nb_joueurs,Nb_Vies,ecran);
 
-            Propagation_Maladie(tab,joueur,Nb_Vies);
+            Propagation_Maladie(tab,joueur,Nb_Vies,ecran);
 
-            gagnant = fin_jeu(tab,joueur, ecran);
+            /*gagnant = fin_jeu(tab,joueur, ecran);
 
             if (gagnant == 1)
 
@@ -1174,7 +1214,7 @@ int jeu(SDL_Surface *ecran)
 
             ClearTerms();
 
-            }
+            }*/
 
     }
 
